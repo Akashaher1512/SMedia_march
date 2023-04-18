@@ -1,5 +1,7 @@
 package com.smedia.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +41,18 @@ public class PostController {
 		return new ResponseEntity<PostDto>(post , HttpStatus.OK);
 	}
 	
+	
+	// get all posts
+	@GetMapping
+	public ResponseEntity<List<PostDto>> getAllPosts(){
+		List<PostDto> allPosts = postService.getAllPosts();
+		
+		return new ResponseEntity<>( allPosts , HttpStatus.OK );
+	}
+	
+	// update post
+	
+	// delete post
 	
 	
 }
