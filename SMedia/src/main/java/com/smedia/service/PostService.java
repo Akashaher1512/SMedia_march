@@ -1,7 +1,6 @@
 package com.smedia.service;
 
-import java.util.List;
-
+import com.smedia.dto.ApiResponse;
 import com.smedia.dto.PostDto;
 
 public interface PostService {
@@ -10,7 +9,7 @@ public interface PostService {
 	PostDto createPost(PostDto postDto);
 	
 	// get all posts
-	List<PostDto> getAllPosts();
+	ApiResponse<PostDto> getAllPosts(int pageNumber , int pageSize , String sortBy , String sortDir);
 	
 	// get post by id
 	PostDto getPostById(Long id);

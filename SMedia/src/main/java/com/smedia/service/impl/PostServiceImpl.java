@@ -4,8 +4,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import com.smedia.dto.ApiResponse;
 import com.smedia.dto.PostDto;
 import com.smedia.entity.Post;
 import com.smedia.exception.ResourceNotFoundException;
@@ -53,14 +58,36 @@ public class PostServiceImpl implements PostService {
 	// get all posts
 
 	@Override
-	public List<PostDto> getAllPosts() {
-		// fetch all posts from db (List<Post>)
-		List<Post> postList = postRepository.findAll();
+	public ApiResponse<PostDto> getAllPosts(int pageNumber , int pageSize , String sortBy , String sortDir) {
+		// sorting
 		
-		// Convert List<Post> to List<PostDto>
-		List<PostDto> postDtoList = postList.stream().map( post -> mapToDto(post)).collect(Collectors.toList());
+		Sort sort = null;
 		
-		return postDtoList;
+		if (sortDir.equalsIgnoreCase("Desc")) {
+			sort = sort.by(sortBy).descending();
+		}else {
+			sort = sort.by(sortBy).ascending();
+		}
+	
+		// crate object of pageable
+		Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
+		
+		// fetch Page from db 
+		Page<Post> page = postRepository.findAll(pageable);
+		
+		// assign values to ApiResponse<T>
+		ApiResponse<PostDto> response = new ApiResponse<PostDto>();
+		
+		response.setContent(page.getContent());
+		response.setFirst(page.isFirst());
+		response.setLast(page.isLast());
+		response.setPageNumber(page.getNumber()+1);
+		response.setPageSize(page.getSize());
+		response.setTotleElements(page.getTotalElements());
+		response.setTotlePages(page.getTotalPages());
+		
+		
+		return response;
 	}
 
 	// get post by id
@@ -86,14 +113,18 @@ public class PostServiceImpl implements PostService {
 	@Override
 	public PostDto updatePost(PostDto postDto, long id) {
 		// fetch record from db for given id (post)
-		
+		Post post = postRepository.findById(id).orElseThrow(()-> new ResourceNotFoundException("Post", "Post_Id", id));
 		// transfer values from postDto to object that we have fetched from db
-		
+		post.setTitle(postDto.getTitle());
+		post.setContent(postDto.getContent());
+		post.setDescription(postDto.getDescription());
 		// save post object object (savedPosd)
+		Post updatedPost = postRepository.save(post);
 		
 		// convert savedPost to PostDtoObject and return it
+		PostDto updatedPostDto = mapToDto(updatedPost);
 		
-		return null;
+		return updatedPostDto;
 	}
 
 	// delete post
@@ -101,9 +132,11 @@ public class PostServiceImpl implements PostService {
 	@Override
 	public String deletePost(Long id) {
 		// fetch record from db for given id (post)
+		Post post = postRepository.findById(id).orElseThrow(()-> new ResourceNotFoundException("Post", "Post_Id", id));
 		// delete record from db
+		postRepository.delete(post);
 		// user String.format() and return msg
-		return null;
+		return String.format("Post with Post_Id : %s deleted scessfully..!!", id);
 	}
 
 	// Conversion of Post to PostDto
